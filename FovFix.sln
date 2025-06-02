@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36127.28 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FovFix", "FovFix\FovFix.csproj", "{35793077-C3EA-4662-8DEC-D5C19E7CB264}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Debug|x64.ActiveCfg = Release|x64
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Debug|x64.Build.0 = Release|x64
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Release|x64.ActiveCfg = Release|x64
+		{35793077-C3EA-4662-8DEC-D5C19E7CB264}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1DBACC44-4A1B-451C-BB12-FC34BD436D8F}
+	EndGlobalSection
+EndGlobal
