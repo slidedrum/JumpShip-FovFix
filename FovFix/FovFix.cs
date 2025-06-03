@@ -1,8 +1,12 @@
-﻿using Il2CppKeepsake;
-using MelonLoader;
-using UnityEngine;
-using HarmonyLib;
+﻿using HarmonyLib;
+using Il2Cpp;
 using Il2CppGoPickerTree;
+using Il2CppKeepsake;
+using MelonLoader;
+using System;
+using System.Runtime;
+using UnityEngine;
+
 
 namespace FovFix
 {
@@ -10,65 +14,92 @@ namespace FovFix
     {
         private static MelonPreferences_Category cfgCategory;
         private static MelonPreferences_Entry<float> cfgTargetFov;
-        private static MelonPreferences_Entry<float> cfgTransitionDuration;
-        private float currentFov = 0f;
-        private float transitionTime = 0f;
-        private bool transitioning = false;
         private CameraManager realCameraManager;
+        private CameraSettings cameraSettings_FirstPersonPlayer;
+        private float timeSinceLastCheck;
+        private float checkInterval = 1f;
+        Camera cam;
 
         public override void OnInitializeMelon()
         {
+            HarmonyInstance.PatchAll();
             cfgCategory = MelonPreferences.CreateCategory("FovFixSettings", "FOV Fix Settings");
             cfgTargetFov = cfgCategory.CreateEntry("TargetFOV", 105f, "Target FOV");
-            cfgTransitionDuration = cfgCategory.CreateEntry("TransitionDuration", 1.0f, "Transition Duration (seconds)");
-        }
-        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
-        {
-            base.OnSceneWasLoaded(buildIndex, sceneName);
-            updateCameraManager();
         }
         public void updateCameraManager()
         {
             var cameraManagers = Resources.FindObjectsOfTypeAll<CameraManager>();
             foreach (CameraManager cameraManager in cameraManagers)
             {
-                if (cameraManager.CurrentDefaultFov != 0f)
+                try
                 {
-                    realCameraManager = cameraManager;
+                    if (cameraManager.CurrentDefaultFov != 0f)
+                    {
+                        realCameraManager = cameraManager;
+                    }
                 }
+                catch (Exception) { }
             }
         }
         public override void OnUpdate()
         {
             base.OnUpdate();
-            Camera cam = Camera.main;
-            if (cam == null) return;
-            if (realCameraManager == null) { updateCameraManager(); }
-            if (!transitioning && Mathf.Approximately(cam.fieldOfView, realCameraManager.CurrentDefaultFov))
+            if (cameraSettings_FirstPersonPlayer == null)
             {
-                currentFov = cam.fieldOfView;
-                transitionTime = 0f;
-                transitioning = true;
-            }
+                timeSinceLastCheck += Time.deltaTime;
 
-            if (transitioning)
-            {
-                if (!Mathf.Approximately(cam.fieldOfView, currentFov))
+                if (timeSinceLastCheck >= checkInterval)
                 {
-                    transitioning = false;
-                    return;
+                    timeSinceLastCheck = 0f;
+                    MelonLogger.Msg($"Looking for CameraSettings_FirstPersonPlayer");
+                    // Try to find the object in the scene
+                    var allSettings = Resources.FindObjectsOfTypeAll<CameraSettings>();
+                    foreach (var settings in allSettings)
+                    {
+                        MelonLogger.Msg($"Saw: {settings.name}");
+                        if (settings.name == "CameraSettings_FirstPersonPlayer")
+                        {
+                            MelonLogger.Msg($"Found: {settings.name}");
+                            cameraSettings_FirstPersonPlayer = settings;
+                        }
+                    }
                 }
-
-                transitionTime += Time.deltaTime;
-                float t = Mathf.Clamp01(transitionTime / cfgTransitionDuration.Value);
-                float easedT = t * t;
-                float newFov = Mathf.Lerp(realCameraManager.CurrentDefaultFov, cfgTargetFov.Value, easedT);
-                cam.fieldOfView = newFov;
-                currentFov = newFov;
-
-                if (t >= 1f)
+            }
+            else
+            {
+                if (cam == null) cam = Camera.main;
+                if (cam == null) return;
+                if (realCameraManager == null) { updateCameraManager(); }
+                if (realCameraManager == null) return;
+                if (realCameraManager.m_TargetFov == cameraSettings_FirstPersonPlayer.m_Fov.Value)
                 {
-                    transitioning = false;
+                    realCameraManager.m_TargetFov = cfgTargetFov.Value;
+                }
+                if (cam.fieldOfView == cameraSettings_FirstPersonPlayer.m_Fov.Value)
+                {
+                    cam.fieldOfView = cfgTargetFov.Value;
+                }
+            }
+        }
+        private void PatchAllCameraSettings()
+        {
+            var allCameraSettings = Resources.FindObjectsOfTypeAll<CameraManager>();
+
+            foreach (CameraManager cameraManagerInstance in allCameraSettings)
+            {
+                // Get the NativeFieldInfoPtr field (you might need BindingFlags.NonPublic)
+                var fieldInfoPtrField = AccessTools.Field(typeof(CameraManager), "NativeFieldInfoPtr_m_OriginalFov");
+                var nativeFieldPtr = fieldInfoPtrField.GetValue(cameraManagerInstance);
+
+                // Use MelonLoader's IL2CPP API to set the float value at the native field pointer
+                // This API depends on the exact type of nativeFieldPtr, but often it's a pointer to memory.
+
+                // Example (pseudo-code; replace with actual API):
+                IntPtr ptr = (IntPtr)nativeFieldPtr; // cast as pointer
+                unsafe
+                {
+                    float* fovPtr = (float*)ptr.ToPointer();
+                    *fovPtr = 120f; // force set your desired FOV value
                 }
             }
         }
