@@ -1,6 +1,7 @@
 ﻿using Il2CppKeepsake;
 using MelonLoader;
 using UnityEngine;
+using HarmonyLib;
 
 namespace FovFix
 {
@@ -9,7 +10,6 @@ namespace FovFix
         private static MelonPreferences_Category cfgCategory;
         private static MelonPreferences_Entry<float> cfgTargetFov;
         private static MelonPreferences_Entry<float> cfgTransitionDuration;
-
         private float initialFov = 65f;
         private float currentFov = 65f;
         private float transitionTime = 0f;
@@ -46,9 +46,9 @@ namespace FovFix
 
                 transitionTime += Time.deltaTime;
                 float t = Mathf.Clamp01(transitionTime / cfgTransitionDuration.Value);
-                float newFov = Mathf.Lerp(initialFov, cfgTargetFov.Value, t);
+                float easedT = t * t;
+                float newFov = Mathf.Lerp(initialFov, cfgTargetFov.Value, easedT);
                 cam.fieldOfView = newFov;
-
                 currentFov = newFov;
 
                 if (t >= 1f)
